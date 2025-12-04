@@ -10,7 +10,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
+}
+
+enum BudgetType {
+  DAY 
+  WEEK
+  MONTH
 }
 
 model User{
@@ -23,13 +29,14 @@ model User{
   updated_at DateTime @updatedAt
 
   transactions Transaction[] @relation("UserTransactions")
+  budgets Budget[] @relation("UserBudgets")
 
   @@map("users")
 }
 
 model Transaction{
   id Int @id @default(autoincrement())
-  user_id Int @unique
+  user_id Int 
   amount Float
   type String
   notes String?
@@ -40,4 +47,19 @@ model Transaction{
   user User @relation("UserTransactions", fields: [user_id], references: [id])
 
   @@map("transactions")
+}
+
+model Budget{
+  id Int @id @default(autoincrement())
+  user_id Int @unique
+  amount Float
+  type BudgetType
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation("UserBudgets", fields: [user_id], references: [id])
+
+  @@unique([user_id, type])
+
+  @@map("budgets")
 }
