@@ -7,11 +7,38 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
 import { TransactionEntity } from './entities/transaction.entity';
-import { TransactionPerDay } from './interface/transaction.interface';
+import { TransactionGroup } from './interface/transaction.interface';
+import { Transaction } from 'generated/prisma/client';
 
 @Injectable()
 export class TransactionService {
   constructor(private prisma: PrismaService) {}
+  private groupTransactions(
+    results: Transaction[],
+    formatter: (date: Date) => string,
+  ): TransactionGroup[] {
+    const grouped: Record<string, TransactionGroup> = {};
+
+    for (const item of results) {
+      const key = formatter(item.date);
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          date: key,
+          total: 0,
+          transactions: [],
+        };
+      }
+
+      const entity = new TransactionEntity(item);
+
+      grouped[key].transactions.push(entity);
+      grouped[key].total += entity.amount;
+    }
+
+    return Object.values(grouped);
+  }
+
   async create(dto: CreateTransactionDto, userId: number) {
     const result = await this.prisma.transaction.create({
       data: {
@@ -115,7 +142,7 @@ export class TransactionService {
     });
   }
 
-  async findByUserIdPerDay(userId: number): Promise<TransactionPerDay[]> {
+  async findByUserIdPerDay(userId: number): Promise<TransactionGroup[]> {
     const results = await this.prisma.transaction.findMany({
       where: { user_id: userId },
       orderBy: { date: 'desc' },
@@ -131,25 +158,51 @@ export class TransactionService {
       );
     }
 
-    const grouped: Record<string, TransactionPerDay> = {};
+    return this.groupTransactions(results, (date: Date) => {
+      return date.toISOString().split('T')[0];
+    });
+  }
 
-    for (const item of results) {
-      const day = item.date.toISOString().split('T')[0];
+  async findByUserIdPerMonth(userId: number): Promise<TransactionGroup[]> {
+    const results = await this.prisma.transaction.findMany({
+      where: { user_id: userId },
+      orderBy: { date: 'desc' },
+    });
 
-      if (!grouped[day]) {
-        grouped[day] = {
-          date: day,
-          total: 0,
-          transactions: [],
-        };
-      }
-
-      const entity = new TransactionEntity(item);
-
-      grouped[day].transactions.push(entity);
-      grouped[day].total += entity.amount;
+    if (results.length === 0) {
+      throw new NotFoundException('No transactions found for this user');
     }
 
-    return Object.values(grouped);
+    if (!results.every((item) => item.user_id === userId)) {
+      throw new ForbiddenException(
+        'You do not have access to some of the transactions',
+      );
+    }
+
+    return this.groupTransactions(results, (date: Date) => {
+      const [year, month] = date.toISOString().split('T')[0].split('-');
+      return `${year}-${month}`;
+    });
+  }
+
+  async findByUserIdPerYear(userId: number): Promise<TransactionGroup[]> {
+    const results = await this.prisma.transaction.findMany({
+      where: { user_id: userId },
+      orderBy: { date: 'desc' },
+    });
+
+    if (results.length === 0) {
+      throw new NotFoundException('No transactions found for this user');
+    }
+
+    if (!results.every((item) => item.user_id === userId)) {
+      throw new ForbiddenException(
+        'You do not have access to some of the transactions',
+      );
+    }
+
+    return this.groupTransactions(results, (date: Date) => {
+      return String(date.getFullYear());
+    });
   }
 }

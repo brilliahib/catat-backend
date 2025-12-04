@@ -60,6 +60,26 @@ export class TransactionController {
     };
   }
 
+  @Get('per-month')
+  async getTransactionsPerMonth(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+    const data = await this.transactionService.findByUserIdPerMonth(userId);
+    return {
+      data: data,
+      message: 'Transactions per month retrieved successfully',
+    };
+  }
+
+  @Get('per-year')
+  async getTransactionsPerYear(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+    const data = await this.transactionService.findByUserIdPerYear(userId);
+    return {
+      data: data,
+      message: 'Transactions per year retrieved successfully',
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: number, @Req() req: AuthenticatedRequest) {
     const userId = req.user.id;
