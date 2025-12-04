@@ -1,7 +1,7 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { CreateBudgetDto } from './create-budget.dto';
 import { IsOptional } from 'class-validator';
-import { BudgetType } from 'generated/prisma/enums';
+import { BudgetType } from 'generated/prisma';
 
 export class UpdateBudgetDto extends PartialType(CreateBudgetDto) {
   @ApiProperty({
