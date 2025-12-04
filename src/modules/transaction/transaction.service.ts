@@ -7,6 +7,7 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
 import { TransactionEntity } from './entities/transaction.entity';
+import { TransactionPerDay } from './interface/transaction.interface';
 
 @Injectable()
 export class TransactionService {
@@ -112,5 +113,43 @@ export class TransactionService {
     await this.prisma.transaction.delete({
       where: { id },
     });
+  }
+
+  async findByUserIdPerDay(userId: number): Promise<TransactionPerDay[]> {
+    const results = await this.prisma.transaction.findMany({
+      where: { user_id: userId },
+      orderBy: { date: 'desc' },
+    });
+
+    if (results.length === 0) {
+      throw new NotFoundException('No transactions found for this user');
+    }
+
+    if (!results.every((item) => item.user_id === userId)) {
+      throw new ForbiddenException(
+        'You do not have access to some of the transactions',
+      );
+    }
+
+    const grouped: Record<string, TransactionPerDay> = {};
+
+    for (const item of results) {
+      const day = item.date.toISOString().split('T')[0];
+
+      if (!grouped[day]) {
+        grouped[day] = {
+          date: day,
+          total: 0,
+          transactions: [],
+        };
+      }
+
+      const entity = new TransactionEntity(item);
+
+      grouped[day].transactions.push(entity);
+      grouped[day].total += entity.amount;
+    }
+
+    return Object.values(grouped);
   }
 }
