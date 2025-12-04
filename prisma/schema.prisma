@@ -12,3 +12,32 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User{
+  id Int @id @default(autoincrement())
+  email String @unique
+  name String
+  password String
+  phone_number String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  transactions Transaction[] @relation("UserTransactions")
+
+  @@map("users")
+}
+
+model Transaction{
+  id Int @id @default(autoincrement())
+  user_id Int @unique
+  amount Float
+  type String
+  notes String?
+  date DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation("UserTransactions", fields: [user_id], references: [id])
+
+  @@map("transactions")
+}
