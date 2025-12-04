@@ -50,6 +50,16 @@ export class TransactionController {
     };
   }
 
+  @Get('per-day')
+  async getTransactionsPerDay(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+    const data = await this.transactionService.findByUserIdPerDay(userId);
+    return {
+      data: data,
+      message: 'Transactions per day retrieved successfully',
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: number, @Req() req: AuthenticatedRequest) {
     const userId = req.user.id;
