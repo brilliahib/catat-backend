@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BudgetType } from 'generated/prisma/enums';
+import { BudgetType } from 'generated/prisma';
 
 export class CreateBudgetDto {
   @ApiProperty({

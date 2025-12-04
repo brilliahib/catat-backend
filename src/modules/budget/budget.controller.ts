@@ -14,7 +14,7 @@ import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
+import type { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @Controller('budget')
 @ApiTags('Budgets')
