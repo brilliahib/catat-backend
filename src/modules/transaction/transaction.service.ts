@@ -239,4 +239,23 @@ export class TransactionService {
       return this.getWeekNumber(date);
     });
   }
+
+  async findLargestTransaction(userId: number): Promise<TransactionEntity[]> {
+    const results = await this.prisma.transaction.findMany({
+      where: { user_id: userId },
+      orderBy: { amount: 'desc' },
+    });
+
+    if (results.length === 0) {
+      throw new NotFoundException('No transactions found for this user');
+    }
+
+    if (!results.every((item) => item.user_id === userId)) {
+      throw new ForbiddenException(
+        'You do not have access to some of the transactions',
+      );
+    }
+
+    return results.map((transaction) => new TransactionEntity(transaction));
+  }
 }

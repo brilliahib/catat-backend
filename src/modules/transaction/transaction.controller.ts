@@ -90,6 +90,16 @@ export class TransactionController {
     };
   }
 
+  @Get('largest')
+  async getLargestTransactions(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+    const data = await this.transactionService.findLargestTransaction(userId);
+    return {
+      data: data,
+      message: 'Largest transactions retrieved successfully',
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: number, @Req() req: AuthenticatedRequest) {
     const userId = req.user.id;
