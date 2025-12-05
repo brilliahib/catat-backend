@@ -12,17 +12,22 @@ import {
 import { BudgetService } from './budget.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
+import { BudgetEntity } from './entities/budget.entity';
 
-@Controller('budget')
+@Controller('budgets')
 @ApiTags('Budgets')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class BudgetController {
   constructor(private readonly budgetService: BudgetService) {}
 
+  @ApiCreatedResponse({
+    description: 'Budget created successfully',
+    type: BudgetEntity,
+  })
   @Post()
   async create(
     @Body() createBudgetDto: CreateBudgetDto,
@@ -47,24 +52,23 @@ export class BudgetController {
     };
   }
 
-  @Patch(':id')
+  @Patch()
   async update(
-    @Param('id') id: string,
     @Body() updateBudgetDto: UpdateBudgetDto,
     @Req() req: AuthenticatedRequest,
   ) {
     const userId = req.user.id;
-    const data = await this.budgetService.update(+id, updateBudgetDto, userId);
+    const data = await this.budgetService.update(updateBudgetDto, userId);
     return {
       data: data,
       message: 'Budget updated successfully',
     };
   }
 
-  @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  @Delete()
+  async remove(@Req() req: AuthenticatedRequest) {
     const userId = req.user.id;
-    const data = await this.budgetService.delete(+id, userId);
+    const data = await this.budgetService.delete(userId);
     return {
       data: data,
       message: 'Budget deleted successfully',
