@@ -33,6 +33,16 @@ export class BudgetService {
   }
 
   async create(dto: CreateBudgetDto, userId: number) {
+    const existingBudget = await this.prisma.budget.findUnique({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    if (existingBudget) {
+      throw new ForbiddenException('Budget already exists for this user');
+    }
+
     const result = await this.prisma.budget.create({
       data: {
         user_id: userId,
@@ -40,10 +50,6 @@ export class BudgetService {
         type: dto.type,
       },
     });
-
-    if (result.user_id === userId) {
-      throw new ForbiddenException('You can only create a budget once');
-    }
 
     return result;
   }
@@ -89,9 +95,11 @@ export class BudgetService {
     };
   }
 
-  async update(id: number, dto: UpdateBudgetDto, userId: number) {
+  async update(dto: UpdateBudgetDto, userId: number) {
     const budget = await this.prisma.budget.findUnique({
-      where: { id },
+      where: {
+        user_id: userId,
+      },
     });
 
     if (!budget) {
@@ -103,7 +111,7 @@ export class BudgetService {
     }
 
     const result = await this.prisma.budget.update({
-      where: { id },
+      where: { user_id: userId },
       data: {
         ...dto,
       },
@@ -112,9 +120,9 @@ export class BudgetService {
     return result;
   }
 
-  async delete(id: number, userId: number) {
+  async delete(userId: number) {
     const budget = await this.prisma.budget.findUnique({
-      where: { id },
+      where: { user_id: userId },
     });
 
     if (!budget) {
@@ -126,7 +134,7 @@ export class BudgetService {
     }
 
     await this.prisma.budget.delete({
-      where: { id },
+      where: { user_id: userId },
     });
   }
 }

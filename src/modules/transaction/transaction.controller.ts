@@ -16,7 +16,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
-@Controller('transaction')
+@Controller('transactions')
 @ApiTags('Transactions')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -77,6 +77,16 @@ export class TransactionController {
     return {
       data: data,
       message: 'Transactions per year retrieved successfully',
+    };
+  }
+
+  @Get('per-week')
+  async getTransactionsPerWeek(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+    const data = await this.transactionService.findByUserIdPerWeek(userId);
+    return {
+      data: data,
+      message: 'Transactions per week retrieved successfully',
     };
   }
 
