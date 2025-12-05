@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
+import { AuthEntity } from './entities/auth.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -11,6 +12,7 @@ export class AuthController {
   @Post('/register')
   @ApiCreatedResponse({
     description: 'User registered successfully',
+    type: AuthEntity,
   })
   async register(@Body() dto: RegisterDto) {
     const data = await this.authService.create(dto);

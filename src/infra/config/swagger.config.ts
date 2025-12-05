@@ -3,8 +3,8 @@ import { INestApplication } from '@nestjs/common';
 
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
-    .setTitle('Title of Documentation') // TODO: change title
-    .setDescription('Description of API endpoints') // TODO: change description
+    .setTitle('Catat Backend') // TODO: change title
+    .setDescription('API documentation for Catat Backend') // TODO: change description
     .setVersion('0.1')
     .build();
 

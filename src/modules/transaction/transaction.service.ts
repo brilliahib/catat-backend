@@ -39,6 +39,16 @@ export class TransactionService {
     return Object.values(grouped);
   }
 
+  private getWeekNumber(date: Date): string {
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear =
+      (date.getTime() - firstDayOfYear.getTime()) / 86400000;
+    const weekNumber = Math.ceil(
+      (pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7,
+    );
+    return `${date.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+  }
+
   async create(dto: CreateTransactionDto, userId: number) {
     const result = await this.prisma.transaction.create({
       data: {
@@ -57,6 +67,9 @@ export class TransactionService {
     const results = await this.prisma.transaction.findMany({
       where: {
         user_id: userId,
+      },
+      orderBy: {
+        date: 'desc',
       },
     });
 
@@ -203,6 +216,27 @@ export class TransactionService {
 
     return this.groupTransactions(results, (date: Date) => {
       return String(date.getFullYear());
+    });
+  }
+
+  async findByUserIdPerWeek(userId: number): Promise<TransactionGroup[]> {
+    const results = await this.prisma.transaction.findMany({
+      where: { user_id: userId },
+      orderBy: { date: 'desc' },
+    });
+
+    if (results.length === 0) {
+      throw new NotFoundException('No transactions found for this user');
+    }
+
+    if (!results.every((item) => item.user_id === userId)) {
+      throw new ForbiddenException(
+        'You do not have access to some of the transactions',
+      );
+    }
+
+    return this.groupTransactions(results, (date: Date) => {
+      return this.getWeekNumber(date);
     });
   }
 }
