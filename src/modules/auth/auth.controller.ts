@@ -1,9 +1,15 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
-import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
 import { AuthEntity } from './entities/auth.entity';
+import type { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -33,6 +39,23 @@ export class AuthController {
     return {
       data: data,
       message: 'User logged in successfully',
+    };
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('/get-auth')
+  @ApiOkResponse({
+    description: 'Get current user data',
+  })
+  async getMe(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+
+    const data = await this.authService.getAuth(userId);
+
+    return {
+      data,
+      message: 'User details retrieved successfully',
     };
   }
 

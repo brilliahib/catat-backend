@@ -258,4 +258,38 @@ export class TransactionService {
 
     return results.map((transaction) => new TransactionEntity(transaction));
   }
+
+  async getTotalCurrentMonth(userId: number) {
+    const now = new Date();
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    const result = await this.prisma.transaction.aggregate({
+      where: {
+        user_id: userId,
+        date: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    return {
+      month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+      total: result._sum.amount ?? 0,
+    };
+  }
 }

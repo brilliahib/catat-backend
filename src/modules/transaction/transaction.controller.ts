@@ -100,6 +100,17 @@ export class TransactionController {
     };
   }
 
+  @Get('total/current-month')
+  async getTotalCurrentMonth(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+    const data = await this.transactionService.getTotalCurrentMonth(userId);
+
+    return {
+      data,
+      message: 'Total transactions for current month retrieved successfully',
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: number, @Req() req: AuthenticatedRequest) {
     const userId = req.user.id;
